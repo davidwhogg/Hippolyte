@@ -11,16 +11,58 @@ if __name__ == '__main__':
     rc('text', usetex=True)
 import glob
 import os
+import pyfits
 import numpy as np
 import pylab as plt
+
+def estimate_sigma(scene, nsigma=3.5, tol=0.0):
+    img = scene.flatten()
+    mask = np.ones(len(img), dtype=bool)
+    ms_old = 0.0
+    for i in range(500):
+        m = np.median(img[mask])
+        ms = np.mean((img[mask] - m) ** 2)
+        mask = (img - m) ** 2 < nsigma ** 2 * ms
+        if i > 1 and np.abs(ms - ms_old) < tol:
+            break
+        ms_old = ms
+    return np.sqrt(ms)
+
+def hogg_imshow(ax, image, sigma, foo):
+    ax.set_yticklabels("")
+    ax.set_xticklabels("")
+    plotimage = image[64-32:64+32,64-32:64+32] - np.median(image)
+    return ax.imshow(plotimage, vmin=vmin, vmax=vmax, interpolation="nearest")
+
+def hogg_savefig(fn):
+    print "saving {0}".format(fn)
+    return plt.savefig(fn)
 
 def main():
     file_pattern = "/data2/dfm/lucky/skemer/*.fits"
     entries = glob.glob(file_pattern)
-    image_list = [os.path.abspath(e) for e in sorted(entries)]
-    assert len(self.image_list) > 0, \
+    files = [os.path.abspath(e) for e in sorted(entries)]
+    assert len(files) > 0, \
         "There are no files matching '{0}'".format(file_pattern)
-    print image_list
+    nn = 6
+    plt.gray()
+    figsize = (10,10)
+    plt.figure(figsize=figsize)
+    for i,fn in enumerate(files):
+        hdulist = pyfits.open(fn)
+        image = hdulist[0].data
+        hdulist.close()
+        print i, fn, image.shape
+        if i == 0:
+            sigma = estimate_sigma(image)
+            vmin = -2. * sigma
+            vmax = 10. * sigma
+        plt.subplot(nn, nn, (i % (nn * nn)) + 1)
+        hogg_imshow(plt.gca(), image, vmin, vmax)
+        if (i + 1) % (nn * nn) == 0:
+            hogg_savefig("{0}.png".format(os.path.basename(fn)))
+            plt.figure(figsize=figsize)
+            assert False
     return None
 
 if __name__ == '__main__':
