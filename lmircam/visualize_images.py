@@ -70,12 +70,12 @@ def main():
         hdulist.close()
         print i, fn, image.shape, np.min(image), np.max(image)
         sky = np.median(image)
-        a, p = get_amplitude_and_phase(image[65-hw:65+hw,65-hw:65+hw], sky)
+        a, p = get_amplitude_and_phase(image[66-hw:66+hw,66-hw:66+hw], sky)
         if i == 0:
             sigma = estimate_sigma(image)
         if i < (nn * nn):
             ax1 = fig1.add_subplot(nn, nn, (i % (nn * nn)) + 1)
-            hogg_imshow(ax1, image[65-hw:65+hw,65-hw:65+hw], sky, sigma)
+            hogg_imshow(ax1, image[66-hw:66+hw,66-hw:66+hw], sky, sigma)
         if (i + 1) == (nn * nn):
             hogg_savefig(fig1, "{0}.png".format(os.path.basename(fn)))
         amps[i] = a
@@ -84,6 +84,11 @@ def main():
     ax2 = fig2.add_subplot(1, 1, 1)
     ax2.plot(phis, amps, 'ko', alpha=0.5)
     hogg_savefig(fig2, "amp-phase.png")
+    fig3 = plt.figure()
+    ax3 = fig3.add_subplot(1, 1, 1)
+    ax3.plot(amps * np.cos(phis), amps * np.sin(phis), 'ko', alpha=0.5)
+    ax3.plot(amps * np.cos(phis), amps * np.sin(phis), 'k-', alpha=0.5)
+    hogg_savefig(fig3, "amp-vector.png")
     return None
 
 if __name__ == '__main__':
