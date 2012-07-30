@@ -31,8 +31,10 @@ def estimate_sigma(scene, nsigma=3.5, tol=0.0):
 def hogg_imshow(ax, image, sigma, foo):
     ax.set_yticklabels("")
     ax.set_xticklabels("")
-    plotimage = image[64-32:64+32,64-32:64+32] - np.median(image)
-    return ax.imshow(plotimage, vmin=vmin, vmax=vmax, interpolation="nearest")
+    #    asinh = lambda img, mu, sigma, f: f * np.arcsinh((img - mu) / sigma) + 0.2
+    #    plotimage = asinh(image[64-32:64+32,64-32:64+32], np.median(image), sigma, foo)
+    plotimage = (image[64-32:64+32,64-32:64+32] - np.median(image)) / sigma
+    return ax.imshow(plotimage, vmin=-40., vmax=200.0, interpolation="nearest")
 
 def hogg_savefig(fn):
     print "saving {0}".format(fn)
@@ -55,10 +57,8 @@ def main():
         print i, fn, image.shape
         if i == 0:
             sigma = estimate_sigma(image)
-            vmin = -2. * sigma
-            vmax = 10. * sigma
         plt.subplot(nn, nn, (i % (nn * nn)) + 1)
-        hogg_imshow(plt.gca(), image, vmin, vmax)
+        hogg_imshow(plt.gca(), image, sigma, 0.1)
         if (i + 1) % (nn * nn) == 0:
             hogg_savefig("{0}.png".format(os.path.basename(fn)))
             plt.figure(figsize=figsize)
