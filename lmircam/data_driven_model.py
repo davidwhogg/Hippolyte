@@ -1,5 +1,5 @@
 '''
-This file is part of the hippolyte project.
+This file is part of the Hippolyte project.
 Copyright 2012 David W. Hogg (NYU) <http://cosmo.nyu.edu/hogg/>.
 '''
 
@@ -35,28 +35,28 @@ def read_data(files):
 def pca(images, K, plotname=None):
     """
     Run PCA on a three-dimensional `(N, nx, ny)` data block `images`,
-    return the `(nx, ny)` mean image, the `(K, nx, ny)` eigenimages
-    and all the `(N, K)` coefficients.
+    return the `(nx, ny)` mean image, the `(K, nx, ny)` eigenimages,
+    all the `(N, K)` coefficients, and all `(N, nx, ny)` reconstructed
+    images (from the `K` eigenimages).
     """
     N, nx, ny = images.shape
     meanimage = np.mean(images, axis=0)
-    print meanimage.shape
     datamatrix = (images - meanimage[None, :, :]).reshape(N, nx * ny)
     u, s, vh = la.svd(datamatrix, full_matrices=False)
-    print u.shape, s.shape, vh.shape
-    print s[0:10], s[-10:]
     # check component ordering
     assert np.all(s[:-1] - s[1:] >= 0.)
     if plotname is not None:
         plt.clf()
-        plt.plot(np.arange(len(s)), s, 'k-')
+        plt.plot(np.arange(len(s)-1) + 1., s[:-1], 'k-')
         plt.xlabel('eigenimage')
         plt.ylabel('variance contribution')
-        plt.semilogy()
+        plt.loglog()
         plt.savefig(plotname)
     eigenimages = vh[:K, :].reshape(K, nx, ny)
-    coefficients = u[:, :K]
-    return meanimage, eigenimages, coefficients
+    # not completely sure of the "transpose" of the following line
+    coefficients = u[:, :K] * s[None, :K]
+    reconstructs = np.dot(coefficients, vh[:K, :]).reshape(N, nx, ny) + meanimage[None, :, :]
+    return meanimage, eigenimages, coefficients, reconstructs
 
 def main():
     """
@@ -68,8 +68,22 @@ def main():
     assert len(files) > 0, \
         "There are no files matching '{0}'".format(file_pattern)
     images = read_data(files)
-    meanimage, eigenimages, coefficients = pca(images, 4, plotname="pca.png")
-    print meanimage.shape, eigenimages.shape, coefficients.shape
+    print "main: Starting PCA..."
+    meanimage, eigenimages, coefficients, recons = pca(images, 16, plotname="pca.png")
+    print "main: ...done PCA"
+    print meanimage.shape, eigenimages.shape, coefficients.shape, recons.shape
+    plt.gray()
+    plt.clf()
+    plt.subplot(1,2,1)
+    j = 17
+    v1, v2 = np.percentile(images[j], [0.01, 99])
+    imj = images[j, 32:32+64, 32:32+64]
+    rej = recons[j, 32:32+64, 32:32+64]
+    plt.imshow(imj, vmin=v1, vmax=v2, interpolation="nearest")
+    plt.subplot(1,2,2)
+    plt.imshow(rej, vmin=v1, vmax=v2, interpolation="nearest")
+    plt.savefig("recon-%03d.png" % j)
+    return None
 
 if __name__ == '__main__':
     main()
