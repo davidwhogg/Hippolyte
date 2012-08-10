@@ -72,17 +72,19 @@ def main():
     meanimage, eigenimages, coefficients, recons = pca(images, 16, plotname="pca.png")
     print "main: ...done PCA"
     print meanimage.shape, eigenimages.shape, coefficients.shape, recons.shape
+    v1, v2 = np.percentile(images, [0.01, 99])
+    plt.figure(figsize=(8,4))
     plt.gray()
-    plt.clf()
-    plt.subplot(1,2,1)
-    j = 17
-    v1, v2 = np.percentile(images[j], [0.01, 99])
-    imj = images[j, 32:32+64, 32:32+64]
-    rej = recons[j, 32:32+64, 32:32+64]
-    plt.imshow(imj, vmin=v1, vmax=v2, interpolation="nearest")
-    plt.subplot(1,2,2)
-    plt.imshow(rej, vmin=v1, vmax=v2, interpolation="nearest")
-    plt.savefig("recon-%03d.png" % j)
+    for j in [0, 1, 2, 3, 5, 7, 11, 13, 17]:
+        plt.clf()
+        plt.subplots_adjust(left=0.05, right=0.95, wspace=0.05)
+        plt.subplot(1,2,1)
+        imj = images[j, 32:32+64, 32:32+64]
+        rej = recons[j, 32:32+64, 32:32+64]
+        plt.imshow(imj, vmin=v1, vmax=v2, interpolation="nearest")
+        plt.subplot(1,2,2)
+        plt.imshow(rej, vmin=v1, vmax=v2, interpolation="nearest")
+        plt.savefig("recon-%03d.png" % j)
     return None
 
 if __name__ == '__main__':
