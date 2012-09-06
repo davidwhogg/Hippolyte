@@ -73,9 +73,9 @@ def main():
     print "main: ...done PCA"
     print meanimage.shape, eigenimages.shape, coefficients.shape, recons.shape
     v1, v2 = np.percentile(images, [0.01, 99])
-    plt.figure(figsize=(8,4))
-    plt.gray()
-    for j in [0, 1, 2, 3, 5, 7, 11, 13, 17]:
+    for j in range(len(files)):
+        plt.figure(figsize=(8,4))
+        plt.gray()
         plt.clf()
         plt.subplots_adjust(left=0.05, right=0.95, wspace=0.05)
         plt.subplot(1,2,1)
